@@ -140,3 +140,4 @@ cython_debug/
 # others
 config_se.py
 .vscode/
+.DS_Store
