@@ -1,9 +1,12 @@
 '''
 策略函数
 '''
-
 from tqsdk import TqApi, TargetPosTask
-from tqsdk.ta import BOLL
+from tqsdk.ta import BOLL, ATR, MA
+
+HOUR = 60*60
+DAY = 24*HOUR
+WEEK = 7*DAY
 class Strategy():
     '''
     策略类，用于存储各种策略方法
@@ -16,18 +19,52 @@ class Strategy():
         杰西·利弗莫尔策略
         '''
         pass
-    def trend_line(self):
+    def trend_line(self, kline_level="day", atr_n=14, MA_n=40):
         '''
         趋势线策略
         '''
-        pass
-    def aberration(self, api=TqApi(), symbol=None):
+        # profit_space_switch = {
+        #     "day":lambda n: ATR(self.api.get_kline_serial(self.symbol, 60*60*24), n),
+        #     "hour":lambda n: ATR(self.api.get_kline_serial(self.symbol, 60*60), n)
+        # }
+        # loss_space_switch = {
+        #     "day":lambda n: ATR(self.api.get_kline_serial(self.symbol, 60*60), n),
+        #     "hour":lambda n: ATR(self.api.get_kline_serial(self.symbol, 5*60), n)
+        # }
+        # loss_space = loss_space_switch[self.kline_level](atr_n)
+        # profit_space = profit_space_switch[self.kline_level](atr_n)
+        trend = 0 # 1 上升趋势，0 震荡， -1 下降趋势
+        quote = self.api.get_quote(self.symbol)
+        target = TargetPosTask(self.api, self.symbol)
+
+        if kline_level == "day":
+            loss_atr_period = 60*60
+            profit_atr_period = 24*60*60
+            trend_period = 24*60*60
+            trend_kline = self.api.get_kline_serial(self.symbol, trend_period)
+        elif kline_level == "week":
+            loss_atr_period = 60*60
+            profit_atr_period = 7*24*60*60
+            trend_period = 24*60*60
+
+        loss_space = ATR(self.api.get_kline_serial(self.symbol, loss_atr_period), atr_n)
+        profit_space = ATR(self.api.get_kline_serial(self.symbol, profit_atr_period), atr_n)
+        if trend_kline.iloc[-1].close > MA(trend_kline, 40).iloc[-1]+2*ATR(trend_kline, atr_n):
+            trend = 1
+        while True:
+            pass
+
+
+
+    def aberration(self):
         '''
         Aberration策略 (难度：初级)
         参考: https://www.shinnytech.com/blog/aberration/
         注: 该示例策略仅用于功能示范, 实盘时请根据自己的策略/经验进行修改
         '''
         # 获取合约信息
+        api = self.api
+        symbol = self.symbol
         quote = api.get_quote(symbol)
         klines = api.get_kline_serial(symbol, 60 * 60 * 24)
         position = api.get_position(symbol)

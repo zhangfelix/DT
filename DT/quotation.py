@@ -5,10 +5,10 @@ import sys
 from tqsdk import TqApi, TargetPosTask, TqAccount
 from tqsdk.tafunc import ma
 from tqsdk import BacktestFinished
-from datetime import date
+from datetime import date, datetime
 from tqsdk import TqApi, TqSim, TqBacktest
 from config_se import config_se
-from aberration import aberration
+from strategy import Strategy
 
 def main(argv=None):
     """
@@ -21,11 +21,18 @@ def main(argv=None):
     acc = TqSim()
     api = TqApi(acc)
 
-    try:
+    # try:
         # 执行策略方法
-        aberration(api, "xxx")
-        api.close()
-    except BacktestFinished:
-        print(acc.trade_log)
+    kline = api.get_kline_serial("SHFE.cu1903", 7*24*60*60)
+    for i in range(200):
+        kline.iloc[i, 0] = datetime.fromtimestamp(kline.iloc[i, 0]/1000000000)
+
+    print(kline.iloc[-20:-1,:])
+        # Strategy(api, "xxx").aberration()
+    api.close()
+    # except BacktestFinished:
+    #     print(acc.trade_log)
+
 if  __name__ == "__main__":
-    sys.exit(main())
+    # sys.exit(main())
+    main()
